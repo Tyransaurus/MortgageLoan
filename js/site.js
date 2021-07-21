@@ -57,7 +57,7 @@ function displayData(payments, loanAmount, payment) {
     //clear the table for previous calculations
     tableBody.innerHTML = "";
     //configure currency formatter.
-    var currencyFormatter = new Intl.NumberFormat('en-US', {
+    let currencyFormatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
     });
@@ -73,7 +73,7 @@ function displayData(payments, loanAmount, payment) {
         paycols[2].textContent = currencyFormatter.format(payments[i].principal.toFixed(2));
         paycols[3].textContent = currencyFormatter.format(payments[i].interest.toFixed(2));
         paycols[4].textContent = currencyFormatter.format(payments[i].totalInterest.toFixed(2));
-        paycols[5].textContent = currencyFormatter.format(payments[i].balance.toFixed(2));
+        paycols[5].textContent = currencyFormatter.format(Math.abs(payments[i].balance.toFixed(2)));
         //append to the table
         tableBody.appendChild(payRow);
     }
