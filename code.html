@@ -59,271 +59,134 @@
                 <div class="col" id="codeCol">
                     <pre>
                         <code class="language-javascript line-numbers">
-                            // events is an array that is set up with preset objects.
-                            let events = [{
-                                event: "ComicCon",
-                                city: "New York",
-                                state: "New York",
-                                attendance: 240000,
-                                date: "6/01/2017",
-                            }, {
-                                event: "ComicCon",
-                                city: "New York",
-                                state: "New York",
-                                attendance: 250000,
-                                date: "6/01/2018",
-                            }, {
-                                event: "ComicCon",
-                                city: "New York",
-                                state: "New York",
-                                attendance: 257000,
-                                date: "6/01/2019",
-                            }, {
-                                event: "ComicCon",
-                                city: "San Diego",
-                                state: "California",
-                                attendance: 130000,
-                                date: "6/01/2017",
-                            }, {
-                                event: "ComicCon",
-                                city: "San Diego",
-                                state: "California",
-                                attendance: 140000,
-                                date: "6/01/2018",
-                            }, {
-                                event: "ComicCon",
-                                city: "San Diego",
-                                state: "California",
-                                attendance: 150000,
-                                date: "6/01/2019",
-                            }, {
-                                event: "HeroesCon",
-                                city: "Charlotte",
-                                state: "North Carolina",
-                                attendance: 40000,
-                                date: "6/01/2017",
-                            }, {
-                                event: "HeroesCon",
-                                city: "Charlotte",
-                                state: "North Carolina",
-                                attendance: 45000,
-                                date: "6/01/2018",
-                            }, {
-                                event: "HeroesCon",
-                                city: "Charlotte",
-                                state: "North Carolina",
-                                attendance: 50000,
-                                date: "6/01/2019",
-                            },];
-
-                            // filtedEvent is a placeholder that holds events for future code
-                            let filteredEvents = events;
-
-                            // this is made so that the webpage can onload the functions as one whole wrapper function
-                            function displayAllData() {
-                                displayDropDown();
-                                displayEvents();
-                                buildDropDown();
+                            //Calculate the payment for the loan
+                            function calcPayment(amount, rate, term) {
+                                return (amount * rate) / (1 - Math.pow(1 + rate, -term));
+                            }
+                            //calculate the interst for the current balance of the loan
+                            function calcInterest(balance, rate) {
+                                return balance * rate;
+                            }
+                            //convert rate to a monthly interest rate
+                            function calcRate() {
+                                let rate = parseFloat(document.getElementById("lrate").value);
+                                return rate = rate / 1200;
                             }
 
-                            // saveEventData is a function that adds another object to the array
-                            function saveEventData() {
-
-                                // this takes the current array in the local storage and sets it to currentEvents
-                                let currentEvents = JSON.parse(localStorage.getItem("eventsArray")) || events;
-
-                                // this sets up a new object so you can put values to it
-                                let newObject = {};
-
-                                // this puts the name and city for the event and saved them as part of an object
-                                newObject["event"] = document.getElementById("newEventName").value;
-                                newObject["city"] = document.getElementById("newEventCity").value;
-
-                                // this sets the variable state as the name and not the value or the acronym
-                                let state = document.getElementById("newEventState");
-                                newObject["state"] = state.options[state.selectedIndex].text;
-
-                                // this sets the attendance as an integer and not a string thats attached to the value
-                                newObject["attendance"] = parseInt(document.getElementById("newEventAttendance").value);
-
-                                // this takes the date and puts it in the same format as the others on the webpage
-                                let eventDate = document.getElementById("newEventDate").value;
-                                let eventDate2 = `${eventDate} 00:00`
-                                newObject["date"] = new Date(eventDate2).toLocaleDateString();
-
-                                // this pushes the object to the array and saves to the localStorage
-                                currentEvents.push(newObject);
-                                localStorage.setItem("eventsArray", JSON.stringify(currentEvents));
-
-                                // this runs the function that runs all the other display functions
-                                displayAllData();
+                            function buildSchedule() {
+                                let loanAmount = Number(document.getElementById("lamount").value);
+                                let term = parseInt(document.getElementById("lterm").value);
+                                let rate = calcRate();
+                                //Assume monthly input
+                                let payment = calcPayment(loanAmount, rate, term);
+                                let payments = getPayments(loanAmount, rate, term, payment);
+                                displayData(payments, loanAmount, payment);
                             }
 
-                            // display the events
-                            function displayEvents() {
+                            // takes variables and outputs an array of set values
+                            function getPayments(amount, rate, term, payment) {
+                                let payments = [];
+                                let balance = amount;
+                                let totalInterest = 0;
+                                let monthlyPrincipal = 0;
+                                let monthlyInterest = 0;
 
-                                // this sets the tableBody as the id of the table that is to be displayed
-                                let tableBody = document.getElementById("results");
+                                // goes through every month and individually calculate all values
+                                for (month = 1; month &lt;= term; month++) {
+                                    monthlyInterest = calcInterest(balance, rate);
+                                    totalInterest += monthlyInterest;
+                                    monthlyPrincipal = payment - monthlyInterest;
+                                    balance = balance - monthlyPrincipal;
 
-                                // this grabs the template in the html and sets it to a variable
-                                let templateRow = document.getElementById("sdTemplate");
-
-                                // this makes sure the tableBody is empty before putting things in
-                                tableBody.innerHTML = '';
-
-                                // this makes currentEvents equal the events stored in the localStorage and 
-                                // if there isn't anything
-                                // sets currentEvents to the global array
-                                let currentEvents = JSON.parse(localStorage.getItem("eventsArray"));
-                                if (currentEvents == null) {
-                                    currentEvents = events;
+                                    // creates an empty object and sets all the values and pushes it into an array
+                                    let currentPayment = {};
+                                    currentPayment["month"] = month;
+                                    currentPayment["payment"] = payment;
+                                    currentPayment["principal"] = monthlyPrincipal;
+                                    currentPayment["interest"] = monthlyInterest;
+                                    currentPayment["totalInterest"] = totalInterest;
+                                    currentPayment["balance"] = balance;
+                                    payments.push(currentPayment);
                                 }
-
-                                // this runs through every element stored in the array
-                                for (let i = 0; i &lt; currentEvents.length; i++) {
-
-                                    // grabs the template
-                                    let tableRow = document.importNode(templateRow.content, true);
-
-                                    // grabs on the columns in the template
-                                    let rowCols = tableRow.querySelectorAll("td");
-
-                                    // sets a different value of a single object in different columns
-                                    rowCols[0].textContent = currentEvents[i].event;
-                                    rowCols[1].textContent = currentEvents[i].city;
-                                    rowCols[2].textContent = currentEvents[i].state;
-                                    rowCols[3].textContent = currentEvents[i].attendance;
-                                    rowCols[4].textContent = currentEvents[i].date;
-
-                                    tableBody.appendChild(tableRow);
-                                }
+                                return payments;
                             }
 
-                            function displayDropDown() {
-
-                                // creates variables to be used and set to be compared to other attributes in the array
-                                let totalAttendance = 0;
-                                let leastAttended = filteredEvents[0].attendance;
-                                let mostAttended = filteredEvents[0].attendance;
-
-                                // for every element in the array, it goes through and checks
-                                for (let i = 0; i &lt; filteredEvents.length; i++) {
-
-                                    // this adds every attendance value in the array to a total
-                                    totalAttendance += filteredEvents[i].attendance;
-
-                                    // this checks if the array value is bigger and smaller than the stored values
-                                    if (filteredEvents[i].attendance >= mostAttended) {
-                                        mostAttended = filteredEvents[i].attendance;
-                                    } else {
-                                        mostAttended = mostAttended;
-                                    }
-                                    if (filteredEvents[i].attendance &lt;= leastAttended) {
-                                        leastAttended = filteredEvents[i].attendance;
-                                    } else {
-                                        leastAttended = leastAttended;
-                                    }
-                                }
-
-                                // this gives us the average using the total and divide it by the array length
-                                let averageAttendance = totalAttendance / filteredEvents.length;
-
-                                // this sets the values as strings back into the html
-                                document.getElementById("total").innerHTML = totalAttendance.toLocaleString();
-                                document.getElementById("most").innerHTML = mostAttended.toLocaleString();
-                                document.getElementById("least").innerHTML = leastAttended.toLocaleString();
-                                document.getElementById("average").innerHTML = averageAttendance.toLocaleString(
-                                    undefined, {
-                                        minimumFractionDigits: 0,
-                                        maximumFractionDigits: 0,
-                                    }
-                                 );
+                            function displayData(payments, loanAmount, payment) {
+                                //get the table we are going to add to.
+                                let tableBody = document.getElementById("scheduleBody");
+                                let template = document.getElementById("scheduleTemplate");
+                                //clear the table for previous calculations
+                                tableBody.innerHTML = "";
+                                //configure currency formatter.
+                                let currencyFormatter = new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                            });
+                            for (let i = 0; i &lt; payments.length; i++) {
+                                //get a clone row template
+                                payRow = template.content.cloneNode(true);
+                                //grab only the columns in the template
+                                paycols = payRow.querySelectorAll("td");
+                                //build the row
+                                //we know that there are six columns in our template
+                                paycols[0].textContent = payments[i].month;
+                                paycols[1].textContent = currencyFormatter.format(payments[i].payment.toFixed(2));
+                                paycols[2].textContent = currencyFormatter.format(payments[i].principal.toFixed(2));
+                                paycols[3].textContent = currencyFormatter.format(payments[i].interest.toFixed(2));
+                                paycols[4].textContent = currencyFormatter.format(payments[i].totalInterest.toFixed(2));
+                                paycols[5].textContent = currencyFormatter.format(Math.abs(payments[i].balance.toFixed(2)));
+                                //append to the table
+                                tableBody.appendChild(payRow);
                             }
-
-                            // this clears the localStorage and refreshes the page
-                            function clearData() {
-                                localStorage.clear();
-                                location.reload();
-                            }
-
-                            // this checks through every city type and displays them on the webpage as a dropdown
-                            function getEvents(cityType) {
-                                let city = cityType.getAttribute("data-string");
-                                let currentEvents = JSON.parse(localStorage.getItem("eventsArray")) || events;
-                                filteredEvents = currentEvents;
-
-                                // this changes the header and filters out the array based on the city type you chose
-                                document.getElementById("statsHeader").innerHTML = `Stats For ${city} Events`;
-                                if (city != "All") {
-                                    filteredEvents = currentEvents.filter(function (item) {
-                                        if (item.city == city) {
-                                            return item;
-                                        }
-                                    });
-                                }
-                                displayDropDown();
-                            }
-
-                            // this builds the dropdown menu
-                            function buildDropDown() {
-
-                                let eventDD = document.getElementById("eventDropDown");
-                                eventDD.innerHTML = "";
-
-                                let template = document.getElementById("cityDD-template");
-
-                                curEvents = JSON.parse(localStorage.getItem("eventsArray"));
-                                if (curEvents == null) {
-                                    curEvents = events;
-                                }
-
-                                // this goes through every event and pull out the city
-                                let distinctEvents = [...new Set(curEvents.map((events) => events.city))];
-                                let ddItemNode = document.importNode(template.content, true);
-
-                                // this pulls from the anchor element in the html and then sets the pick all option
-                                ddItem = ddItemNode.querySelector("a");
-                                ddItem.setAttribute("data-string", "All");
-                                ddItem.textContent = "All";
-                                eventDD.appendChild(ddItem);
-
-                                // this then goes through every distinct city and sets 
-                                // it in the dropdown list to be selected
-                                for (var i = 0; i &lt; distinctEvents.length; i++) {
-                                    ddItemNode = document.importNode(template.content, true);
-                                    ddItem = ddItemNode.querySelector("a");
-                                    ddItem.setAttribute("data-string", distinctEvents[i]);
-                                    ddItem.textContent = distinctEvents[i];
-                                    eventDD.appendChild(ddItem);
-                                }
+                            //total interest is in the last row of the payments array.
+                            let totalInterest = payments[payments.length - 1].totalInterest;
+                            //calculate total cost
+                            let totalCost = Number(loanAmount) + totalInterest;
+                            //Build out the summary area
+                            let labelPrincipal = document.getElementById("totalPrincipal");
+                            labelPrincipal.innerHTML = Number(loanAmount).toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                            });
+                            let labelInterest = document.getElementById("totalInterest");
+                            labelInterest.innerHTML = Number(totalInterest).toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                            });
+                            let paymentdiv = document.getElementById("payment");
+                            paymentdiv.innerHTML = Number(payment).toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                            });
+                            let totalCostDiv = document.getElementById("totalCost");
+                            totalCostDiv.innerHTML = Number(totalCost).toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                            });
                             }
                         </code>
                     </pre>
                 </div>
                 <div class="col-lg-4 col-sm-12" id="explainCol">
-                    <p>The code is seperated into 3 functions.</p>
-                    <h5>getNumbers()</h5>
-                    <p>This uses the <strong>getElementById</strong> function to grab values that are inputed on the
-                        webpage
-                        to change them into javascript values that can be used. These values are then checked to make
-                        sure they
-                        are integers and in a proper format. They are then used in the <strong>generateFizzBuzz</strong>
-                        function to create an array.<strong>
-                            displayResults</strong> then takes the array and displays them on the website.</p>
-                    <h5>generateFizzBuzz()</h5>
-                    <p><strong>generateFizzBuzz</strong> takes two numbers which are <strong>first</strong> and
-                        <strong>second</strong> and goes through the values of <strong>innerBounds</strong> and
-                        <strong>outerBounds</strong> and puts them into an array. If the number is divisble by the
-                        first value then the value is replaced by Fizz, while if the number is divisible by the second
-                        value then the value is replaced by Buzz. If it is divisble by both then it will be FizzBuzz.
-                        This is then returned as the <strong>numbers</strong> array to be
-                        used by <strong>displayResults</strong>.</p>
-                    <h5>displayResults()</h5>
-                    <p> <strong>displayResults</strong> takes the values of ouput from the webpage and the template from
-                        under the footer in the html code.
-                        It then empties out the table so that new values can be shown. It then runs through
-                        <strong>fizzBuzzData</strong> with a
-                        for loop to then display them in rows and columns.
+                    <p>The code is seperated into 6 functions and a summary area.</p>
+                    <h5>calcPayment(), calcInterest() and calcRate()</h5>
+                    <p>These functions use the amount, rate and term you put in to calculate how much you will have to pay in total, 
+                        the interest rate for the balance, and how much interest you are paying to be used later on.
+                    </p>
+                    <h5>buildSchedule()</h5>
+                    <p>This wrapper function takes the amount and term from the webpage and runs the <strong>calcRate</strong> and <strong>calcPayment</strong> 
+                    and <strong>getPayments</strong> functions and then sends them to <strong>displayData</strong>.</p>
+                    <h5>getPayments()</h5>
+                    <p> This function creates an empty array and then for every month, will calculate the monthly interest, the total interest so far, 
+                        the monthly principal, and the balance that is left and set them all to a single object and push them into this new empty array and returns it.
+                    </p>
+                    <h5>displayData()</h5>
+                    <p>This function takes the template from the html and the table id and then formatting all numbers into a USD currency style and then outputting 
+                        the information into seperate rows. The Math.abs on balance is to make the final $0 balance to be positive and not negative.
+                    </p>
+                    <h5>Summary Area</h5>
+                    <p>This is the area to show the summary information at the top right after doing the calculation for total interest and total cost, 
+                        it then formats it into USB and then sends them into the HTML as a <strong>toLocaleString</strong>.
                     </p>
                 </div>
             </div>
